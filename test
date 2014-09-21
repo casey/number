@@ -39,3 +39,4 @@ ok('get value succeeded: ' + r.text)
 
 
 # test that sequential puts give sequential numbers
+# test that puts with a key that's too long fails
