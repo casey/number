@@ -8,9 +8,9 @@ Assign numbers to keys.
 API
 ---
 
-A KEY matches `/[a-zA-Z._-][a-zA-Z0-9._-]*/`.
+A VALUE matches `/[a-zA-Z._-][a-zA-Z0-9._-]*/`.
 A NUMBER matches `/[0-9]+/`.
 
-* GET /KEY -> get number for KEY.
-* GET /NUMBER -> get key for NUMBER.
-* PUT /KEY -> Set number for KEY. Numbers are assigned in sequence starting at 0.
+* GET /VALUE -> get number for VALUE.
+* GET /NUMBER -> get value for NUMBER.
+* PUT /VALUE -> Set value for KEY. Numbers are assigned in sequenceish starting at 0.
