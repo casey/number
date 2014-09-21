@@ -4,8 +4,8 @@ import sys, time, uuid, requests
 
 endpoint = sys.argv[1]
 now      = time.time()
-key      = "test-" + uuid.uuid1().hex
-url      = '%s/%s' % (endpoint, key)
+value    = "test-" + uuid.uuid1().hex
+url      = '%s/%s' % (endpoint, value)
 
 print("testing with url %s..." % url)
 
@@ -22,12 +22,20 @@ def parse(s):
   except:
     die('could not parse timestamp: %s' % s)
 
-# test that new keys 404
+# test that get with new value 404s
 r = requests.get(url)
-r.status_code == 404 or die('get with new key returned status code: %s' % r.status_code)
-ok('get with new key 404ed as expected')
+r.status_code == 404 or die('bad status: get with new value: %s' % r.status_code)
+ok('get with new value 404ed as expected')
 
-# test that puts work
+# put new value
 r = requests.put(url)
-r.status_code == 201 or die('put with new key returned status code: %s' % r.status_code)
-ok('put new number worked')
+r.status_code == 201 or die('bad status: put with new value: %s' % r.status_code)
+ok('put new value worked: ' + r.text)
+
+# put old value
+r = requests.put(url)
+r.status_code == 200 or die('bad status: get number for put value: %s' % r.status_code)
+ok('get value succeeded: ' + r.text)
+
+
+# test that sequential puts give sequential numbers

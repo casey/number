@@ -18,25 +18,25 @@ var reservation int64 = 1
 
 func getValue(c appengine.Context, number int64) (*string, error) {
   results := make([]entry, 1)
-  _, e := datastore.NewQuery("Entry").Filter("number =", number).Limit(len(results)).GetAll(c, &results)
-  if e == datastore.ErrNoSuchEntity {
-    return nil, nil
-  } else if e == nil {
+  keys, e := datastore.NewQuery("Entry").Filter("number =", number).Limit(len(results)).GetAll(c, &results)
+  if e != nil {
+    return nil, e
+  } else if len(keys) > 0 {
     return &results[0].Value, nil
   } else {
-    return nil, e
+    return nil, nil
   }
 }
 
 func getNumber(c appengine.Context, value string) (*int64, error) {
   results := make([]entry, 1)
-  _, e := datastore.NewQuery("Entry").Filter("value =", value).Limit(len(results)).GetAll(c, &results)
-  if e == datastore.ErrNoSuchEntity {
-    return nil, nil
-  } else if e == nil {
+  keys, e := datastore.NewQuery("Entry").Filter("value =", value).Limit(len(results)).GetAll(c, &results)
+  if e != nil {
+    return nil, e
+  } else if len(keys) > 0 {
     return &results[0].Number, nil
   } else {
-    return nil, e
+    return nil, nil
   }
 }
 
