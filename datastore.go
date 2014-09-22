@@ -3,11 +3,6 @@ package app
 import "appengine"
 import "appengine/datastore"
 
-type Entry struct {
-  Number int64  `datastore:"number"`
-  Value  string `datastore:"value"`
-}
-
 type Counter struct {
   Count int64 `datastore:"count",noindex`
 }
@@ -16,37 +11,41 @@ var next        int64 = 0
 var end         int64 = 0
 var reservation int64 = 1
 
-func query(c appengine.Context, lhs string, rhs interface{}) (*Entry, error) {
-  results := make([]Entry, 1)
-  keys, e := datastore.NewQuery("Entry").Filter(lhs, rhs).Limit(len(results)).GetAll(c, &results)
+func numberRoot(c appengine.Context, number int64) *datastore.Key {
+  return datastore.NewKey(c, "Number",  "", number, nil)
+}
+
+func nameRoot(c appengine.Context, name string) *datastore.Key {
+  return datastore.NewKey(c, "Name",  name, 0, nil)
+}
+
+func getName(c appengine.Context, number int64) (*string, error) {
+  keys, e := datastore.NewQuery("Name").Ancestor(numberRoot(c, number)).KeysOnly().GetAll(c, nil)
   if e != nil {
     return nil, e
-  } else if len(keys) > 0 {
-    return &results[0], nil
-  } else {
+  } else if len(keys) == 0 {
     return nil, nil
-  }
-}
-
-func getValue(c appengine.Context, number int64) (*string, error) {
-  result, e := query(c, "number =", number)
-  if result != nil {
-    return &result.Value, nil
   } else {
-    return nil, e
+    result := new(string)
+    *result = keys[0].StringID()
+    return result, nil
   }
 }
 
-func getNumber(c appengine.Context, value string) (*int64, error) {
-  result, e := query(c, "value =", value)
-  if result != nil {
-    return &result.Number, nil
+func getNumber(c appengine.Context, name string) (*int64, error) {
+  keys, e := datastore.NewQuery("Number").Ancestor(nameRoot(c, name)).KeysOnly().GetAll(c, nil)
+  if e != nil {
+    return nil, e
+  } else if len(keys) == 0 {
+    return nil, nil
   } else {
-    return nil, e
+    result := new(int64)
+    *result = keys[0].IntID()
+    return result, nil
   }
 }
 
-func allocate(c appengine.Context, value string) (*int64, error) {
+func allocate(c appengine.Context, name string) (*int64, error) {
   if next == end {
     var nextNext int64 = 0
     var nextEnd  int64 = 0
@@ -55,7 +54,9 @@ func allocate(c appengine.Context, value string) (*int64, error) {
       key := datastore.NewKey(c, "Counter", "counter0", 0, nil)
       count := Counter{}
       e := datastore.Get(c, key, &count)
-      if e != nil && e != datastore.ErrNoSuchEntity {
+      if e == datastore.ErrNoSuchEntity {
+        count.Count = 1
+      } else if e != nil {
           return e
       }
       nextNext = count.Count
@@ -74,13 +75,19 @@ func allocate(c appengine.Context, value string) (*int64, error) {
     end = nextEnd
   }
 
-  key := datastore.NewKey(c, "Entry", "", 0, nil)
-  entry := Entry{next, value}
-  _, e := datastore.Put(c, key, &entry)
-  
+  opts := datastore.TransactionOptions{XG: true}
+  e := datastore.RunInTransaction(c, func(c appengine.Context) error {
+    k1 := datastore.NewKey(c, "Name"  , name, 0   , numberRoot(c, next))
+    k2 := datastore.NewKey(c, "Number", ""  , next, nameRoot  (c, name))
+    if _, e := datastore.Put(c, k1, &struct{}{}); e != nil { return e }
+    if _, e := datastore.Put(c, k2, &struct{}{}); e != nil { return e }
+    return nil
+  }, &opts)
+
   if e == nil {
+    assigned := next
     next++
-    return &entry.Number, nil
+    return &assigned, nil
   } else {
     return nil, e
   }

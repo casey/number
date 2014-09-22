@@ -4,15 +4,14 @@ import sys, time, uuid, requests, time
 
 endpoint = sys.argv[1]
 now      = time.time()
-value    = "test-" + uuid.uuid1().hex
-url      = '%s/%s' % (endpoint, value)
 
 ENDC  = '\033[0m'
 RED   = '\033[31m'
 GREEN = '\033[32m'
 
-def test(msg):
-  sys.stdout.write("%s" % msg)
+def test(msg=''):
+  msg = msg[0:15]
+  sys.stdout.write("%s " % msg.ljust(15, '.'))
 
 def fail(msg):
   sys.stdout.write("%sFAIL%s: %s\n" % (RED, ENDC, msg))
@@ -24,20 +23,54 @@ def okay(msg):
   else:
     sys.stdout.write("%sOKAY%s\n" % (GREEN, ENDC))
 
-def request(method, url, expected_status):
-  test('%s: expecting %s... ' % (method, expected_status))
-  r = requests.request(method, url)
+def request(method, path, expected_status):
+  test('%s %s' % (method, expected_status))
+  r = requests.request(method, '%s/%s' % (endpoint, path))
   r.status_code == expected_status or fail('%s: %s' % (r.status_code, r.text.strip()))
-  okay('%s: %s' % (r.status_code, r.text.strip()))
+  okay('%s - %s' % (r.status_code, r.text.strip()))
   return r.text
 
-request('GET', url, 404)
-request('PUT', url, 201); time.sleep(0.1)
-request('PUT', url, 200)
+# long name rejected
+request('PUT', uuid.uuid1().hex + uuid.uuid1().hex + uuid.uuid1().hex, 403)
 
-# test that sequential puts give sequential numbers
-# test that puts with a key that's too long fails
-# get value for number
-# get number for value
-# test concurrency
-# test with a larger increment
+names = []
+numbers = []
+
+for i in range(4):
+  # get new name 404
+  name = "test-" + uuid.uuid1().hex
+  e = request('GET', name, 404)
+  e == '404 Not Found\n' or fail('unexpected error message: %s' % e)
+
+  n1 = request('PUT', name, 201) # create works
+  n2 = request('PUT', name, 200) # duplicate create idempotent
+  n3 = request('GET', name, 200) # get works
+
+  # all requests equal
+  test('match')
+  n1 == n2 == n3 or fail('numbers different: %s %s %s' % (n1, n2, n3))
+  okay('%s %s %s' % (n1, n2, n3))
+  names.append(name)
+  numbers.append(int(n1))
+
+last = numbers[0] - 1
+
+for name, number in zip(names, numbers):
+  # numbers are sequential
+  test('sequential')
+  number == last + 1 or fail('%s != %s + 1' % (number, last))
+  okay('%s == %s + 1' % (number, last))
+
+  # names can be retrieved by number
+  retrieved = request('GET', number, 200)
+  test('retrieve name')
+  retrieved == name or fail('%s != %s' % (retrieved, name)) 
+  okay('%s == %s' % (retrieved, name))
+
+  # numbers can be retrieved by name
+  retrieved = request('GET', name, 200)
+  test('retrieve number')
+  int(retrieved) == number or fail('%s != %s' % (retrieved, number))
+  okay('%s == %s' % (retrieved, number))
+
+  last = number

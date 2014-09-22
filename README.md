@@ -1,16 +1,16 @@
-id
-==
+number
+======
 
-Assign numbers to keys.
+Assign numbers to names with low storage overhead.
 
-[Test instance here.](http://rodarmor-id.appspot.com)
+[Test instance here.](http://rodarmor-number.appspot.com)
 
 API
 ---
 
-A KEY matches `/[a-zA-Z._-][a-zA-Z0-9._-]*/`.
+A NAME matches `/[a-zA-Z._-][a-zA-Z0-9._-]*/`.
 A NUMBER matches `/[0-9]+/`.
 
-* PUT /KEY -> Allocate number for KEY. Numbers are allocated in sequenceish starting at 0.
-* GET /KEY -> Get number for KEY.
-* GET /NUMBER -> Get key for NUMBER.
+* PUT /NAME -> Allocate number for NAME. Numbers are allocated in sequenceish starting at 0.
+* GET /NAME -> Get number for NAME.
+* GET /NUMBER -> Get name for NUMBER.

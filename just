@@ -16,4 +16,4 @@ test:
 	./test http://localhost:8080
 
 test-deployed:
-	./test http://rodarmor-id.appspot.com
+	./test http://rodarmor-number.appspot.com

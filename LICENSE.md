@@ -1,4 +1,4 @@
-"This" means everything in the repository at github.com/casey/id.
+"This" means everything in the repository at github.com/casey/number.
 
 Anyone may do anything with this.
 
