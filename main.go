@@ -11,14 +11,6 @@ import . "flotilla"
 var put_re = regexp.MustCompile(`^/(?P<name>[a-zA-Z._-][a-zA-Z0-9._-]{0,63})$`)
 var get_re = regexp.MustCompile(`^/(?P<name>[a-zA-Z._-][a-zA-Z0-9._-]{0,63})|(?P<number>[0-9]+)$`)
 
-func init() {
-  Handle("/").Get(get).Put(put).Options(options)
-}
-
-func options(r *http.Request) {
-  Status(http.StatusOK)
-}
-
 func displayNumber(number int64) string {
   return fmt.Sprintf("%v", number - 1)
 }
@@ -26,6 +18,14 @@ func displayNumber(number int64) string {
 func parseNumber(number string) (int64, error) {
   n, e := strconv.ParseInt(number, 10, 64)
   return n + 1, e
+}
+
+func init() {
+  Handle("/").Get(get).Put(put).Options(options)
+}
+
+func options(r *http.Request) {
+  Status(http.StatusOK)
 }
 
 func get(r *http.Request) {
