@@ -12,7 +12,6 @@ var put_re = regexp.MustCompile(`^/(?P<value>[a-zA-Z._-][a-zA-Z0-9._-]{0,63})$`)
 var get_re = regexp.MustCompile(`^/(?P<value>[a-zA-Z._-][a-zA-Z0-9._-]{0,63})|(?P<number>[0-9]+)$`)
 
 func init() {
-  Debug(true)
   Handle("/").Get(get).Put(put).Options(options)
 }
 

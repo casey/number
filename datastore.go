@@ -3,40 +3,46 @@ package app
 import "appengine"
 import "appengine/datastore"
 
-type entry struct {
+type Entry struct {
   Number int64  `datastore:"number"`
   Value  string `datastore:"value"`
 }
 
-type counter struct {
-  Count int64 `datastore:"count"`
+type Counter struct {
+  Count int64 `datastore:"count",noindex`
 }
 
 var next        int64 = 0
 var end         int64 = 0
 var reservation int64 = 1
 
-func getValue(c appengine.Context, number int64) (*string, error) {
-  results := make([]entry, 1)
-  keys, e := datastore.NewQuery("Entry").Filter("number =", number).Limit(len(results)).GetAll(c, &results)
+func query(c appengine.Context, lhs string, rhs interface{}) (*Entry, error) {
+  results := make([]Entry, 1)
+  keys, e := datastore.NewQuery("Entry").Filter(lhs, rhs).Limit(len(results)).GetAll(c, &results)
   if e != nil {
     return nil, e
   } else if len(keys) > 0 {
-    return &results[0].Value, nil
+    return &results[0], nil
   } else {
     return nil, nil
   }
 }
 
-func getNumber(c appengine.Context, value string) (*int64, error) {
-  results := make([]entry, 1)
-  keys, e := datastore.NewQuery("Entry").Filter("value =", value).Limit(len(results)).GetAll(c, &results)
-  if e != nil {
-    return nil, e
-  } else if len(keys) > 0 {
-    return &results[0].Number, nil
+func getValue(c appengine.Context, number int64) (*string, error) {
+  result, e := query(c, "number =", number)
+  if result != nil {
+    return &result.Value, nil
   } else {
-    return nil, nil
+    return nil, e
+  }
+}
+
+func getNumber(c appengine.Context, value string) (*int64, error) {
+  result, e := query(c, "value =", value)
+  if result != nil {
+    return &result.Number, nil
+  } else {
+    return nil, e
   }
 }
 
@@ -47,7 +53,7 @@ func allocate(c appengine.Context, value string) (*int64, error) {
     
     e := datastore.RunInTransaction(c, func(c appengine.Context) error {
       key := datastore.NewKey(c, "Counter", "counter0", 0, nil)
-      count := counter{}
+      count := Counter{}
       e := datastore.Get(c, key, &count)
       if e != nil && e != datastore.ErrNoSuchEntity {
           return e
@@ -69,7 +75,7 @@ func allocate(c appengine.Context, value string) (*int64, error) {
   }
 
   key := datastore.NewKey(c, "Entry", "", 0, nil)
-  entry := entry{next, value}
+  entry := Entry{next, value}
   _, e := datastore.Put(c, key, &entry)
   
   if e == nil {
