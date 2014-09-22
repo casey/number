@@ -31,7 +31,7 @@ def request(method, path, expected_status):
   return r.text
 
 # long name rejected
-request('PUT', uuid.uuid1().hex + uuid.uuid1().hex + uuid.uuid1().hex, 403)
+request('PUT', 'h' * 200, 403)
 
 names = []
 numbers = []

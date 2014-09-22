@@ -8,8 +8,8 @@ import "strconv"
 
 import . "flotilla"
 
-var put_re = regexp.MustCompile(`^/(?P<name>[a-zA-Z._-][a-zA-Z0-9._-]{0,63})$`)
-var get_re = regexp.MustCompile(`^/(?P<name>[a-zA-Z._-][a-zA-Z0-9._-]{0,63})|(?P<number>[0-9]+)$`)
+var put_re = regexp.MustCompile(`^/(?P<name>[a-zA-Z._-][a-zA-Z0-9._-]{0,127})$`)
+var get_re = regexp.MustCompile(`^/(?P<name>[a-zA-Z._-][a-zA-Z0-9._-]{0,127})|(?P<number>[0-9]+)$`)
 
 func displayNumber(number int64) string {
   return fmt.Sprintf("%v", number - 1)
