@@ -1,7 +1,7 @@
 number
 ======
 
-Assign numbers to names with low storage overhead.
+Numbering service
 
 [Test instance here.](http://rodarmor-number.appspot.com)
 
